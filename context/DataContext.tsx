@@ -242,19 +242,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // --- Suppliers ---
   const addSupplier = async (s: Omit<Supplier, 'id'>) => {
     const dbS = {
-        project_id: s.projectId, name: s.name, document: s.document, contact: s.contact, default_category: s.defaultCategory
+        project_id: s.projectId, 
+        name: s.name, 
+        document: s.document || null, // Ensure empty strings become null
+        contact: s.contact, 
+        default_category: s.defaultCategory
     };
     const { error } = await supabase.from('suppliers').insert(dbS);
-    if (!error) refreshData();
+    if (error) throw error; // Throw error to be caught by UI
+    await refreshData();
   };
 
   const updateSupplier = async (id: string, s: Partial<Supplier>) => {
      const dbS: any = {};
      if (s.name) dbS.name = s.name;
      if (s.contact) dbS.contact = s.contact;
+     if (s.document !== undefined) dbS.document = s.document || null;
      if (s.defaultCategory) dbS.default_category = s.defaultCategory;
+     
      const { error } = await supabase.from('suppliers').update(dbS).eq('id', id);
-     if (!error) refreshData();
+     if (error) throw error; // Throw error to be caught by UI
+     await refreshData();
   };
 
   const deleteSupplier = async (id: string) => {

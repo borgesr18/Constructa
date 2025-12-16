@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { useData } from '../context/DataContext';
 import { TRANSLATIONS } from '../utils';
 import { Supplier, ExpenseCategory } from '../types';
-import { Plus, Trash2, Pencil, Truck, Phone, Tag, Save, X, FileBadge } from 'lucide-react';
+import { Plus, Trash2, Pencil, Truck, Phone, Tag, Save, X, FileBadge, Loader2, AlertCircle } from 'lucide-react';
 
 export const Suppliers: React.FC = () => {
   const { project, suppliers, addSupplier, updateSupplier, deleteSupplier } = useData();
@@ -12,6 +11,11 @@ export const Suppliers: React.FC = () => {
   // Modal State for Suppliers
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  
+  // UI State
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const initialFormState = {
     name: '',
     contact: '',
@@ -23,6 +27,7 @@ export const Suppliers: React.FC = () => {
   const handleCreate = () => {
     setEditingSupplier(null);
     setFormData(initialFormState);
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
@@ -34,6 +39,7 @@ export const Suppliers: React.FC = () => {
       document: supplier.document || '',
       defaultCategory: supplier.defaultCategory || 'MATERIAL'
     });
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
@@ -43,22 +49,35 @@ export const Suppliers: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      projectId: project.id,
-      name: formData.name,
-      contact: formData.contact,
-      document: formData.document,
-      defaultCategory: formData.defaultCategory
-    };
+    setIsSaving(true);
+    setErrorMsg('');
 
-    if (editingSupplier) {
-      updateSupplier(editingSupplier.id, payload);
-    } else {
-      addSupplier(payload);
+    try {
+      // Treat empty string as NULL to avoid DB constraint issues
+      const cleanedDocument = formData.document.trim() === '' ? undefined : formData.document.trim();
+
+      const payload = {
+        projectId: project.id,
+        name: formData.name,
+        contact: formData.contact,
+        document: cleanedDocument,
+        defaultCategory: formData.defaultCategory
+      };
+
+      if (editingSupplier) {
+        await updateSupplier(editingSupplier.id, payload);
+      } else {
+        await addSupplier(payload);
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Ocorreu um erro ao salvar o fornecedor. Verifique os dados e tente novamente.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -148,6 +167,14 @@ export const Suppliers: React.FC = () => {
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              
+              {errorMsg && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-start gap-2">
+                   <AlertCircle size={16} className="mt-0.5 shrink-0"/>
+                   <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Nome da Empresa/Pessoa <span className="text-red-500">*</span></label>
                 <input 
@@ -198,6 +225,7 @@ export const Suppliers: React.FC = () => {
               <div className="pt-4 flex gap-3">
                  <button 
                    type="button" 
+                   disabled={isSaving}
                    onClick={() => setIsModalOpen(false)}
                    className="flex-1 px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
                  >
@@ -205,10 +233,11 @@ export const Suppliers: React.FC = () => {
                  </button>
                  <button 
                    type="submit" 
-                   className="flex-1 px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-primary hover:bg-slate-800 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2"
+                   disabled={isSaving}
+                   className="flex-1 px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-primary hover:bg-slate-800 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70"
                  >
-                   <Save size={18} />
-                   Salvar
+                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                   {isSaving ? 'Salvando...' : 'Salvar'}
                  </button>
                </div>
             </form>
