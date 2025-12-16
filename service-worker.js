@@ -1,8 +1,9 @@
-const CACHE_NAME = 'constructa-v1';
+const CACHE_NAME = 'constructa-v2';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon.svg'
 ];
 
 // Instalação do Service Worker
@@ -61,7 +62,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .catch(() => {
-          return caches.match('/index.html');
+          // Fallback para ./index.html em caso de erro de rede ou 404
+          return caches.match('./index.html');
         })
     );
     return;
