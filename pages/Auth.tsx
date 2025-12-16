@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Building, ArrowRight, Loader2, AlertCircle, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const Auth: React.FC = () => {
+  const navigate = useNavigate();
+  const { session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [view, setView] = useState<'LOGIN' | 'SIGNUP' | 'FORGOT'>('LOGIN');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Redireciona automaticamente se o usuário já estiver logado
+  useEffect(() => {
+    if (session) {
+      navigate('/');
+    }
+  }, [session, navigate]);
 
   const translateError = (msg: string) => {
     if (msg.includes('Invalid login credentials')) return 'Email ou senha incorretos.';
@@ -39,9 +50,10 @@ export const Auth: React.FC = () => {
           password,
         });
         if (error) throw error;
+        // O redirecionamento é tratado pelo useEffect acima quando a sessão atualizar
       } else if (view === 'FORGOT') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/#/settings', // Redirect back to app to handle password update
+          redirectTo: window.location.origin + '/#/settings', 
         });
         if (error) throw error;
         setSuccessMsg('Email de recuperação enviado! Verifique sua caixa de entrada.');
