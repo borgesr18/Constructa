@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Save, AlertTriangle, Building, Wallet, CheckCircle, Trash2, Info, LogOut, Cloud } from 'lucide-react';
+import { Save, AlertTriangle, Building, Wallet, CheckCircle, Trash2, Info, LogOut, Cloud, Download } from 'lucide-react';
 import { Project } from '../types';
 
 export const Settings: React.FC = () => {
@@ -13,15 +13,35 @@ export const Settings: React.FC = () => {
   
   const [formData, setFormData] = useState<Project | null>(project);
   const [isSaved, setIsSaved] = useState(false);
+  const [installable, setInstallable] = useState(false);
 
   // Sync state if project changes externally
   useEffect(() => {
     setFormData(project);
+    
+    // Check if install prompt is available
+    if ((window as any).deferredPrompt) {
+      setInstallable(true);
+    }
   }, [project]);
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleInstallClick = async () => {
+    const promptEvent = (window as any).deferredPrompt;
+    if (!promptEvent) return;
+    
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    
+    if (outcome === 'accepted') {
+      (window as any).deferredPrompt = null;
+      setInstallable(false);
+    }
   };
 
   if (!formData) return null;
@@ -59,6 +79,27 @@ export const Settings: React.FC = () => {
             Sair da Conta
         </button>
       </div>
+      
+      {/* Install App Banner (Only visible if installable) */}
+      {installable && (
+        <div className="bg-primary text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-top-4">
+           <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-lg">
+                 <Download size={24} />
+              </div>
+              <div>
+                 <h3 className="font-bold text-lg">Instalar Aplicativo</h3>
+                 <p className="text-sm text-slate-300">Instale o Constructa no seu dispositivo para acesso rápido.</p>
+              </div>
+           </div>
+           <button 
+             onClick={handleInstallClick}
+             className="bg-white text-primary px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+           >
+             Instalar Agora
+           </button>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         

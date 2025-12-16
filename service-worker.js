@@ -1,4 +1,4 @@
-const CACHE_NAME = 'constructa-v3';
+const CACHE_NAME = 'constructa-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -41,33 +41,27 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 2. Estratégia App Shell para Navegação (HTML)
-  // Se for uma navegação (abrir app, recarregar, digitar URL), SEMPRE retorna o index.html do cache.
-  // Isso corrige o erro 404 ao abrir o app em rotas como /transactions.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       caches.match('./index.html').then((cachedResponse) => {
-        // Retorna o HTML do cache se existir, senão tenta a rede
         return cachedResponse || fetch(event.request);
       })
     );
     return;
   }
 
-  // 3. Estratégia Stale-While-Revalidate para Assets (CSS, JS, Imagens Locais)
+  // 3. Estratégia Stale-While-Revalidate para Assets
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {
-          // Atualiza o cache com a versão mais nova da rede
           if (networkResponse && networkResponse.status === 200) {
             cache.put(event.request, networkResponse.clone());
           }
           return networkResponse;
         }).catch(() => {
-          // Se falhar a rede e não tiver cache, falha silenciosamente ou retorna nada
+          // Fallback silencioso
         });
-        
-        // Retorna o cache se tiver, senão espera a rede
         return cachedResponse || fetchPromise;
       });
     })
