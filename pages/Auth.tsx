@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Building, ArrowRight, Loader2, AlertCircle, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { ArrowRight, Loader2, AlertCircle, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ConstructaLogo } from '../components/ConstructaLogo';
 
 export const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -62,8 +63,8 @@ export const Auth: React.FC = () => {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="p-8 text-center bg-slate-50 border-b border-gray-100">
-           <div className="mx-auto w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-              <Building size={24} />
+           <div className="mx-auto w-16 h-16 bg-primary text-white rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-primary/30">
+              <ConstructaLogo className="w-10 h-10" color="text-accent" />
            </div>
            <h1 className="text-2xl font-bold text-gray-900">Constructa</h1>
            <p className="text-sm text-gray-500 mt-2">Gestão Financeira de Obras</p>
