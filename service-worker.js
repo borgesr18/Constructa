@@ -1,4 +1,4 @@
-const CACHE_NAME = 'constructa-v2';
+const CACHE_NAME = 'constructa-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,7 @@ const STATIC_ASSETS = [
   './icon.svg'
 ];
 
-// Instalação do Service Worker
+// Instalação: Cacheia os arquivos essenciais
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Ativação e limpeza de caches antigos
+// Ativação: Limpa caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -32,40 +32,44 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Interceptação de requisições
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Ignorar requisições para o Supabase (garantir dados frescos)
-  if (url.hostname.includes('supabase.co')) {
+  // 1. Ignorar requisições externas (Supabase, CDNs, etc) exceto nossas imagens
+  if (!url.origin.includes(self.location.origin)) {
     return;
   }
 
-  // Estratégia Stale-While-Revalidate para CSS, JS e Imagens
-  if (event.request.destination === 'style' || event.request.destination === 'script' || event.request.destination === 'image') {
+  // 2. Estratégia App Shell para Navegação (HTML)
+  // Se for uma navegação (abrir app, recarregar, digitar URL), SEMPRE retorna o index.html do cache.
+  // Isso corrige o erro 404 ao abrir o app em rotas como /transactions.
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
-          const fetchPromise = fetch(event.request).then((networkResponse) => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-          return cachedResponse || fetchPromise;
-        });
+      caches.match('./index.html').then((cachedResponse) => {
+        // Retorna o HTML do cache se existir, senão tenta a rede
+        return cachedResponse || fetch(event.request);
       })
     );
     return;
   }
 
-  // Estratégia Network First para HTML (Navegação)
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          // Fallback para ./index.html em caso de erro de rede ou 404
-          return caches.match('./index.html');
-        })
-    );
-    return;
-  }
+  // 3. Estratégia Stale-While-Revalidate para Assets (CSS, JS, Imagens Locais)
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          // Atualiza o cache com a versão mais nova da rede
+          if (networkResponse && networkResponse.status === 200) {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Se falhar a rede e não tiver cache, falha silenciosamente ou retorna nada
+        });
+        
+        // Retorna o cache se tiver, senão espera a rede
+        return cachedResponse || fetchPromise;
+      });
+    })
+  );
 });

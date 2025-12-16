@@ -10,9 +10,12 @@
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json" />
-    <!-- Favicon pointing to local SVG -->
+    
+    <!-- Favicon (SVG para navegadores modernos) -->
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
-    <link rel="apple-touch-icon" href="./icon.svg">
+    
+    <!-- Apple Touch Icon (PNG para iOS - fallback para garantir ícone na home) -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1055/1055644.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
