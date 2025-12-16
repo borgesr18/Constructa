@@ -13,6 +13,7 @@ import { Auth } from './pages/Auth';
 import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Loader2, PlusCircle } from 'lucide-react';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { session, loading } = useAuth();
@@ -107,6 +108,7 @@ const App: React.FC = () => {
     <AuthProvider>
       <DataProvider>
         <HashRouter>
+            <PWAInstallPrompt />
             <Routes>
                 <Route path="/login" element={<Auth />} />
                 <Route path="/*" element={
