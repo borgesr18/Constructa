@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Save, AlertTriangle, Building, Wallet, CheckCircle, Trash2, Info, LogOut, Cloud } from 'lucide-react';
 import { Project } from '../types';
 
 export const Settings: React.FC = () => {
   const { project, updateProject, clearTransactions } = useData();
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState<Project | null>(project);
   const [isSaved, setIsSaved] = useState(false);
@@ -16,6 +18,11 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     setFormData(project);
   }, [project]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   if (!formData) return null;
 
@@ -45,7 +52,7 @@ export const Settings: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Configurações da Obra</h1>
         <button 
-           onClick={() => signOut()}
+           onClick={handleLogout}
            className="text-red-600 font-medium hover:bg-red-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
         >
             <LogOut size={18} />

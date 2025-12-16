@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Wallet, Users, ArrowRightLeft, Menu, LogOut, Building, Truck, Landmark, FileText, PieChart } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // New Custom Icon for Constructa
 const ConstructaLogo = ({ className = "w-8 h-8", color = "text-accent" }) => (
@@ -13,6 +14,13 @@ const ConstructaLogo = ({ className = "w-8 h-8", color = "text-accent" }) => (
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Resumo', path: '/' },
@@ -60,7 +68,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </nav>
 
         <div className="mt-auto border-t border-white/10 pt-4">
-          <button className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white w-full transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white w-full transition-colors hover:bg-white/5 rounded-lg"
+          >
             <LogOut size={20} />
             Sair
           </button>
