@@ -10,7 +10,7 @@ export const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [view, setView] = useState<'LOGIN' | 'SIGNUP' | 'FORGOT'>('LOGIN');
+  const [view, setView] = useState<'LOGIN' | 'FORGOT'>('LOGIN');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -36,15 +36,7 @@ export const Auth: React.FC = () => {
     setSuccessMsg('');
 
     try {
-      if (view === 'SIGNUP') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        setSuccessMsg('Cadastro realizado! Verifique seu email para confirmar a conta antes de entrar.');
-        setView('LOGIN');
-      } else if (view === 'LOGIN') {
+      if (view === 'LOGIN') {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -144,7 +136,6 @@ export const Auth: React.FC = () => {
                 {loading ? <Loader2 size={20} className="animate-spin" /> : (
                   <>
                     {view === 'LOGIN' && 'Entrar no Sistema'}
-                    {view === 'SIGNUP' && 'Criar Conta'}
                     {view === 'FORGOT' && 'Recuperar Senha'}
                     {view !== 'FORGOT' && <ArrowRight size={18} />}
                   </>
@@ -153,24 +144,6 @@ export const Auth: React.FC = () => {
            </form>
 
            <div className="mt-6 text-center space-y-3">
-              {view === 'LOGIN' && (
-                <button 
-                  onClick={() => { setView('SIGNUP'); setError(''); setSuccessMsg(''); }}
-                  className="text-sm text-gray-500 hover:text-primary font-medium transition-colors"
-                >
-                  Não tem conta? <span className="font-bold">Crie uma agora</span>
-                </button>
-              )}
-
-              {view === 'SIGNUP' && (
-                <button 
-                  onClick={() => { setView('LOGIN'); setError(''); setSuccessMsg(''); }}
-                  className="text-sm text-gray-500 hover:text-primary font-medium transition-colors"
-                >
-                  Já tem uma conta? <span className="font-bold">Faça Login</span>
-                </button>
-              )}
-
               {view === 'FORGOT' && (
                 <button 
                   onClick={() => { setView('LOGIN'); setError(''); setSuccessMsg(''); }}
